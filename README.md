@@ -1,8 +1,7 @@
 # Cache-Aligned Lock-Free SPSC Queue
 
 This project is a high-performance, lock-free Single-Producer Single-Consumer
-(SPSC) ring buffer written in C++20. It is designed to act as a core component
-for systems requiring ultra-low latency and zero-allocation data streaming.
+(SPSC) ring buffer written in C++20.
 
 ## Project Goals
 
