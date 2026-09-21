@@ -1,18 +1,21 @@
 #pragma once
+#include <atomic>
 #include <bit>
 #include <cstddef>
 #include <type_traits>
 
 template <typename T, size_t RequestedCapacity>
-  requires std::is_trivially_copyable_v<T>
+  requires std::is_trivially_copyable_v<T> // required to use an array since no
+                                           // args are accepted in constructor
 class SpscQueue {
 public:
   static constexpr size_t Capacity = std::bit_ceil(RequestedCapacity);
+  static constexpr size_t Mask = Capacity - 1; // since Capacity is power of 2
 
 private:
-  T buffer[Capacity];
-  size_t start = 0;
-  size_t end = 0;
+  T buffer_[Capacity];
+  std::atomic<size_t> start_ = 0;
+  std::atomic<size_t> end_ = 0;
 
 public:
   SpscQueue() {}
@@ -21,8 +24,8 @@ public:
     if (this->size() >= Capacity) {
       return false;
     }
-    buffer[end % Capacity] = item;
-    end++;
+    buffer_[end_ & Mask] = item;
+    end_++;
     return true;
   }
 
@@ -30,14 +33,14 @@ public:
     if (this->empty()) {
       return false;
     }
-    item = buffer[start % Capacity];
-    start++;
+    item = buffer_[start_ & Mask];
+    start_++;
     return true;
   }
 
-  bool empty() const { return start == end; }
+  [[nodiscard]] bool empty() const { return start_ == end_; }
 
-  size_t size() const { return end - start; }
+  [[nodiscard]] size_t size() const { return end_ - start_; }
 
-  size_t capacity() const { return Capacity; }
+  [[nodiscard]] size_t capacity() const { return Capacity; }
 };
